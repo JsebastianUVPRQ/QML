@@ -1,0 +1,8 @@
+\begin{tabular}{lrrr}
+\toprule
+Model & Accuracy & F1-Score & Time (s) \\
+\midrule
+Classical (RBF) & 0.9000 & 0.8929 & 0.0029 \\
+Quantum (Ising) & 0.8167 & 0.7925 & 135.3687 \\
+\bottomrule
+\end{tabular}

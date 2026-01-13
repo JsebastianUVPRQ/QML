@@ -1,50 +1,65 @@
 """
 Quantum Backend Configuration.
-Gestiona el acceso al simulador AER para CPU/GPU usando primitivas nativas.
+Gestiona el acceso al simulador AER para CPU/GPU usando primitivas V2.
+Aplica transpilación forzosa para evitar errores de instrucciones desconocidas.
 """
-from qiskit_aer.primitives import Sampler as AerSampler
+from qiskit import transpile
+from qiskit_aer import AerSimulator
+from qiskit_aer.primitives import SamplerV2
 from qiskit_machine_learning.kernels import FidelityQuantumKernel
 from qiskit_algorithms.state_fidelities import ComputeUncompute
 
 def get_gpu_kernel(feature_map):
     """
-    Configura el kernel usando qiskit-aer.
-    Intenta activar GPU, si falla, usa CPU silenciosamente.
+    Configura el kernel usando qiskit-aer SamplerV2.
+    Transpila el circuito y activa GPU si es posible.
     """
-    print("⚙️ Configurando Backend de Simulación (Aer)...")
+    print("⚙️ Configurando Backend de Simulación (Aer V2)...")
     
+    # 1. TRANSPILACIÓN PREVENTIVA (CRÍTICO)
+    # Convertimos el "ZZFeatureMap" abstracto en compuertas físicas (CX, RZ, H)
+    # que el simulador Aer sí entiende.
+    print("   -> Transpilando circuito para el simulador...")
+    backend_temp = AerSimulator()
+    transpiled_map = transpile(feature_map, backend_temp)
+    
+    # Instanciamos el Sampler V2
+    sampler = SamplerV2()
+    
+    # INTENTO 1: Configurar GPU
     try:
-        # INTENTO 1: Configurar Sampler con GPU
-        # run_options={"device": "GPU"} es la clave para qiskit-aer
         print("   -> Buscando GPU NVIDIA...")
         
-        sampler = AerSampler(
-            run_options={"method": "statevector", "device": "GPU", "shots": None},
-            transpile_options={"optimization_level": 0}
-        )
+        # Opciones para GPU
+        sampler.options.backend_options = {
+            "method": "statevector",
+            "device": "GPU"
+        }
         
-        # Pequeña prueba de fuego para ver si la GPU responde sin error
-        # (Esto lanzará excepción si no hay drivers CUDA)
-        dummy_circ = feature_map.bind_parameters([0.1]*feature_map.num_parameters)
-        job = sampler.run([dummy_circ])
-        _ = job.result() 
+        # Prueba de fuego con el circuito YA TRANSPILADO
+        pub = (transpiled_map, [0] * transpiled_map.num_parameters)
+        
+        # Ejecutamos (esto lanzará error si no hay CUDA)
+        job = sampler.run([pub])
+        result = job.result()
         
         print("   🟢 ÉXITO: GPU NVIDIA activada.")
-        
+
     except Exception as e:
         # INTENTO 2: Fallback a CPU
-        # El error suele ser "AerError: GPU not available" o similar
-        print(f"   ⚠️ GPU no disponible o mal configurada ({e}).")
-        print("   🔵 Usando CPU (Intel).")
+        print(f"   ⚠️ GPU no disponible ({e}).")
+        print("   🔵 Usando CPU (Intel Standard).")
         
-        sampler = AerSampler(
-            run_options={"method": "statevector", "device": "CPU", "shots": None}
-        )
+        # Revertimos a CPU
+        sampler.options.backend_options = {
+            "method": "statevector",
+            "device": "CPU"
+        }
 
-    # Conectar el Sampler a la calculadora de Fidelidad
+    # Conectar el Sampler V2 a la calculadora de Fidelidad
     fidelity = ComputeUncompute(sampler=sampler)
     
-    # Crear el Kernel
-    kernel = FidelityQuantumKernel(feature_map=feature_map, fidelity=fidelity)
+    # Crear el Kernel USANDO EL MAPA TRANSPILADO
+    kernel = FidelityQuantumKernel(feature_map=transpiled_map, fidelity=fidelity)
     
     return kernel

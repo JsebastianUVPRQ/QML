@@ -88,6 +88,17 @@ def run_benchmark():
     plt.tight_layout()
     plt.show()
 
+    # Guardar resultados para el paper
+    print("\n📝 Guardando Tabla 1...")
+    if not os.path.exists("references"): os.makedirs("references")
+    
+    # CSV para Excel
+    df_res.to_csv("references/table_1_results.csv", index=False)
+    
+    # Formato LaTeX (copiar y pegar en Overleaf)
+    with open("references/table_1_latex.txt", "w") as f:
+        f.write(df_res.to_latex(index=False, float_format="%.4f"))
+        
     return svc_classic, svc_quantum, data
 
 if __name__ == "__main__":

@@ -1,8 +1,6 @@
-¡Genial! Manos a la obra. 👷‍♂️⚛️
 
-Vamos a preparar el terreno. Lo primero es configurar tu entorno para que soporte tanto la matemática clásica (tensores/matrices) como la simulación cuántica.
 
-### Paso 1: Instalación del Stack "Quantum-Classic" 🛠️
+### Instalación del Stack "Quantum-Classic" 🛠️
 
 Abre tu terminal. Te recomiendo crear un entorno virtual para no ensuciar tu instalación principal de Python.
 
@@ -24,7 +22,7 @@ pip install qiskit qiskit-machine-learning qiskit-aer
 
 ---
 
-### Paso 2: El Script "Esqueleto" 💀
+### main script
 
 Este script hace el trabajo sucio: carga los datos, balancea las clases (porque hay muy pocos fraudes vs. transacciones reales) y aplica PCA para reducir la dimensionalidad de 29 variables a solo 2 o 4 (que son las que "caben" en una simulación cuántica casera).
 
@@ -120,5 +118,3 @@ plt.show()
 Ejecuta este código. Deberías ver una gráfica con puntos azules y rojos.
 
 Si ves que los puntos rojos y azules están muy mezclados (difíciles de separar con una línea recta), **¡felicidades!** 🎉 Acabas de demostrar por qué necesitamos un **Kernel Cuántico**: para proyectar estos puntos a un espacio más complejo donde sí se puedan separar.
-
-Avísame cuando tengas la gráfica o si te saltó algún error de librería.

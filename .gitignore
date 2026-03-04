@@ -26,6 +26,7 @@ egg/
 # =============================================================================
 # Raw data directories (trailing slash indicates directory)
 data/raw/
+references
 
 # =============================================================================
 # IDEs and Editors
